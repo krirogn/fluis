@@ -46,5 +46,16 @@ export default {
 
   // Build Configuration (https://go.nuxtjs.dev/config-build)
   build: {
+
+    ///
+    publicPath: '/nuxtfiles/',
+    /// You can extend webpack config here
+    extend: function (config, {isDev, isClient}, ctx) {
+      config.module.rules.push({
+        test: /\.hjson$/,
+        use: 'raw-loader',
+      });
+    },
+
   }
 }

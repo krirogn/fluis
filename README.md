@@ -23,7 +23,7 @@ For detailed explanation on how things work, check out [Nuxt.js docs](https://nu
 ### Supported platforms
 - [ ] Web
 - [ ] iPhone/Android
-- [ ] WebOS
+- [ ] [WebOS](http://webostv.developer.lge.com/)
 - [ ] AppleTV
 - [ ] Philips SmartTV
 
@@ -35,6 +35,7 @@ hosted with services like Netlify and others.
 To do this one must first clone the source code
 to it's own repository, and then you change
 the config file, and then you can host it.
+
 ### Frontend (Closed source solution)
 Simply enter the URL to the web frontend
 when you open the app, and then enter

@@ -1,0 +1,5 @@
+{
+    /// The base URL to the backend server.
+    //  Like "www.fluis.io"
+    backendURL: 'www.fluis.io'
+}
