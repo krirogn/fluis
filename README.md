@@ -20,7 +20,7 @@ $ npm run generate
 For detailed explanation on how things work, check out [Nuxt.js docs](https://nuxtjs.org).
 
 ## Roadmap
-Supported platforms:
+### Supported platforms
 - [ ] Web
 - [ ] iPhone/Android
 - [ ] WebOS
@@ -28,13 +28,17 @@ Supported platforms:
 - [ ] Philips SmartTV
 
 ## How it works
-### Frontend (Web)
+### Frontend (Selfhosted Web)
 Is a static Nuxt SSP that can be statically
 hosted with services like Netlify and others.
 
 To do this one must first clone the source code
 to it's own repository, and then you change
 the config file, and then you can host it.
+### Frontend (Closed source solution)
+Simply enter the URL to the web frontend
+when you open the app, and then enter
+username and password like you normally do.
 
 ### Backend
 Is an Apache PHP server that conatins all
