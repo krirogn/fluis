@@ -1,5 +1,6 @@
 {
     /// The base URL to the backend server.
-    //  Like "www.fluis.io"
-    backendURL: 'www.fluis.io'
+    //  Like 'http://localhost:3030/'
+    //backendURL: 'www.fluis.io'
+    backendURL: 'http://localhost:3030/'
 }
