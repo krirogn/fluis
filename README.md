@@ -23,7 +23,7 @@ For detailed explanation on how things work, check out [Nuxt.js docs](https://nu
 ### Supported platforms
 - [ ] Web
 - [ ] iPhone/Android
-- [ ] Chrome Cast
+- [ ] Chrome Cast
 - [ ] [WebOS](http://webostv.developer.lge.com/)
 - [ ] AppleTV
 - [ ] Philips SmartTV
@@ -35,7 +35,7 @@ For detailed explanation on how things work, check out [Nuxt.js docs](https://nu
 - [ ] Xbox One/Xbox S
 - [ ] Altibox Dekoder
 - [ ] Amazon Fire TV
-- [ ] [Roku](https://developer.roku.com/en-gb/overview)
+- [ ] [Roku](https://developer.roku.com/en-gb/overview)
 
 ## How it works
 ### Frontend (Selfhosted Web)
