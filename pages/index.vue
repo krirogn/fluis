@@ -1,10 +1,13 @@
 <template>
   <div class="container">
+
+    <!-- The header -->
     <div class="head">
+      <!-- The background title -->
       <div class="background" :style="{ backgroundImage: 'url(' + header.img + ')' }"></div>
       <div class="fade">
         <div class="cont">
-          <p class="name">{{ header.name }}</p>
+          <p class="titleName">{{ header.name }}</p><br>
           <div class="buttons">
             <button type="button" class="btn play">Play Now</button>
             <button type="button" class="btn list">Watch List</button>
@@ -12,11 +15,13 @@
         </div>
       </div>
 
+      <!-- The header bar -->
       <div class="header">
         
       </div>
     </div>
 
+    <!-- The category slide -->
     <div class="categories">
       <div v-for="c in categories" class="cat" :style="{ backgroundImage: 'url(' + c.img + ')' }">
         <div class="fade">
@@ -24,17 +29,26 @@
         </div>
       </div>
     </div>
-
+    <!-- The movies slide -->
     <div class="t">
       <p class="h">My Movies</p>
       <div class="titles">
-        <div v-for="m in movies" class="mov" :style="{ backgroundImage: 'url(' + m.img + ')' }">
+        <div v-for="m in movies" class="mov" :style="{ backgroundImage: 'url(' + m.img + ')' }" @click="select(m)">
           <div class="fade">
 
           </div>
         </div>
       </div>
     </div>
+
+    <!-- The title card -->
+    <div v-if="selected != null" class="card">
+      <div class="deselect" @click="deselect"></div>
+      <div class="info">
+        <div class="mov mi" :style="{ backgroundImage: 'url(' + selected.img + ')' }"></div>
+      </div>
+    </div>
+
   </div>
 </template>
 
@@ -45,13 +59,30 @@ import axios from '~/plugins/axios'
 
 /// Enables the HJSON format parser
 var Hjson = require('hjson')
+import fitty from 'fitty'
 
 export default Vue.extend({
   data: () => ({
     config: Hjson.parse(require('../fluis.config.hjson').default),
+
+    selected: null,
+
     header: {
-      img: "https://www.themoviedb.org/t/p/w1066_and_h600_bestv2/kf456ZqeC45XTvo6W9pW5clYKfQ.jpg",
-      name: "Soul"
+      //name: "Soul",
+      //img: "https://www.themoviedb.org/t/p/w1066_and_h600_bestv2/kf456ZqeC45XTvo6W9pW5clYKfQ.jpg",
+
+      //name: "My Neightbour Totoro",
+      //img: "https://www.themoviedb.org/t/p/w1066_and_h600_bestv2/fxYazFVeOCHpHwuqGuiqcCTw162.jpg",
+
+      name: "Ratatouille",
+      img: "https://www.themoviedb.org/t/p/original/rpgNpXn02ivV5KLQjQHnFVWyOgU.jpg",
+
+      //name: "Shrek",
+      //img: "https://www.themoviedb.org/t/p/original/hhcAdZBIUSaQ6T2Si5uPjavNXZ1.jpg",
+
+      //name: "The Curious Case of Benjamin Button",
+      //img: "https://www.themoviedb.org/t/p/w1066_and_h600_bestv2/6ZvgyKPAatpcHbVsKknly4K4zC6.jpg",
+      
     },
     categories: [
       {
@@ -77,6 +108,19 @@ export default Vue.extend({
       }
     ],
     movies: [
+      "508442",
+      "324552",
+      "808",
+      "4922",
+      "1771",
+      "2062",
+      "431693",
+      "464052",
+      "475557",
+      "400160",
+      "287947",
+      "8392"
+      /*
       {
         name: "John Wick 2",
         img: "https://www.themoviedb.org/t/p/w440_and_h660_face/hXWBc0ioZP3cN4zCu6SN3YHXZVO.jpg"
@@ -120,10 +164,14 @@ export default Vue.extend({
       {
         name: "My Neighbor Totoro",
         img: "https://www.themoviedb.org/t/p/w440_and_h660_face/ykeaF3Ldz1Kf6sfnOJJH4dW56F4.jpg"
-      }
+      }*/
     ]
   }),
   mounted() {
+    fitty('.titleName', {
+      multiLine: true
+    });
+
     axios({
       method: 'get',
       url: "v"
@@ -134,6 +182,14 @@ export default Vue.extend({
     .catch( (error) => {
       alert(error);
     })
+  },
+  methods: {
+    select(i: any) {
+      this.selected = i;
+    },
+    deselect() {
+      this.selected = null;
+    }
   }
 })
 </script>
@@ -189,7 +245,7 @@ export default Vue.extend({
       background-image:  linear-gradient(rgba(0,0,0, 0) 0%,rgba(0,0,0, 1) 100%);
 
       .cont {
-        width: 30%;
+        width: 50%;
 
         position: relative;
         left: 0;
@@ -198,7 +254,9 @@ export default Vue.extend({
 
         margin-left: calc(#{$margin} * 2);
         
-        .name {
+        .titleName {
+          width: 50%;
+
           text-align: left;
           font-size: 5vw;
           font-family: Arial, Helvetica, sans-serif;
@@ -207,7 +265,8 @@ export default Vue.extend({
 
           color: white;
 
-          margin-bottom: 5px;;
+          margin-bottom: 5px;
+          user-select: none;
         }
 
         .buttons {
@@ -252,7 +311,8 @@ export default Vue.extend({
       background-repeat: no-repeat;
       background-position: center top;
 
-      filter: blur(4px);
+      //background-size: calc(100% - (2 * #{$margin}) + 30px);
+      //filter: blur(4px);
     }
   }
 
@@ -312,14 +372,34 @@ export default Vue.extend({
     }
   }
 
+  $movSpace: 20px;
+  $movWidth: calc(15vw - (#{$movSpace} / 2));
+  .mov {
+    width: $movWidth;
+    height: calc(#{$movWidth} * (16/9));
+
+    display: inline-block;
+    transform: scale(0.95);
+
+    border-radius: 20px;
+    cursor: pointer;
+
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center top;
+
+    margin-right: $movSpace;
+  }
+  .mov:hover, .mov:focus {
+    transform: scale(1);
+  }
+
   .t {
     width: 100%;
     position: relative;
     left: 0;
     top: calc(50vh + #{$categoriesHeight} + 20px);
     //top: calc(50% + 20px + #{$categoriesHeight});
-
-    padding-left: $margin;
 
     .h {
       text-align: left;
@@ -329,6 +409,7 @@ export default Vue.extend({
       color: white;
 
       margin-bottom: 5px;
+      padding-left: $margin;
     }
 
     .titles {
@@ -339,27 +420,46 @@ export default Vue.extend({
       white-space: nowrap;
 
       margin-bottom: 20px;
+    }
+  }
 
-      $movSpace: 20px;
-      $movWidth: calc(15vw - (#{$movSpace} / 2));
-      .mov {
-        width: $movWidth;
-        height: calc(#{$movWidth} * (16/9));
+  .card {
+    width: 100vw;
+    height: 100vh;
 
-        display: inline-block;
-        transform: scale(0.95);
+    position: fixed;
+    top: 0;
+    left: 0;
 
-        border-radius: 20px;
-        cursor: pointer;
+    $infoHeight: 50%;
+    .deselect {
+      width: 100%;
+      height: calc(100% - #{$infoHeight});
 
-        background-size: cover;
-        background-repeat: no-repeat;
-        background-position: center top;
+      position: inherit;
+      top: 0;
+      left: 0;
+    }
 
-        margin-right: $movSpace;
-      }
-      .mov:hover, .mov:focus {
-        transform: scale(1);
+    .info {
+      width: 100%;
+      height: $infoHeight;
+
+      position: inherit;
+      bottom: 0;
+      left: 0;
+
+      border-radius: 20px 20px 0 0;
+
+      background-color: #1a1a1a;
+
+      .mi {
+        position: relative;
+        top: 50%;
+        transform: translateY(-50%);
+        left: 20px;
+
+        cursor: default;
       }
     }
   }

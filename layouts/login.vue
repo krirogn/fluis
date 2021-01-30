@@ -1,55 +1,10 @@
 <template>
   <div>
-    <div v-if="!loggedIn">
-      <div style="position:absolute;height:100vh;width:100vw;background:white;"><p>Load</p></div>
-    </div>
-    <div v-else>
-      <Nuxt />
-    </div>
+    <Nuxt />
   </div>
 </template>
 
-<script lang="ts">
-/// Standard Vue/Nuxt modules
-import Vue from 'vue'
-import VueCookies from 'vue-cookies'
-Vue.use(VueCookies)
-VueCookies.config('7d')
-
-import Login from '~/assets/modules/Login'
-import axios from '~/plugins/axios'
-
-export default Vue.extend({
-  data: () => ({
-    loggedIn: false
-  }),
-  created() {
-    this.CheckLogin(this)
-
-    // Creds
-		console.log('FLUIS 2021');
-		console.log('Developed by Kristian Fredrik Rognsvaag');
-		console.log('- - - - - - - - - - - - - -' );
-  },
-  watch: {
-    $route (to, from){
-      this.CheckLogin(this);
-    }
-  },
-  methods: {
-		CheckLogin(that: any) {
-    	var login = new Login(axios);
-      login.IsLoggedIn(that)
-    },
-  }
-})
-</script>
-
 <style>
-body {
-  background-color: black;
-}
-
 html {
   font-family:
     'Source Sans Pro',
