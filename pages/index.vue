@@ -393,6 +393,7 @@ export default Vue.extend({
     }
   }
 
+  $cardColor: #111111;
   .card {
     width: 100vw;
     height: 100vh;
@@ -421,7 +422,7 @@ export default Vue.extend({
 
       border-radius: 20px 20px 0 0;
 
-      background-color: rgb(26, 26, 26);
+      background-color: $cardColor;
 
       .left {
         height: 100%;
@@ -473,7 +474,7 @@ export default Vue.extend({
           width: 100%;
           height: 100%;
 
-          background-image:  linear-gradient(-90deg, rgba(26,26,26, 0.1) 0%,rgba(26,26,26,1) 100%);
+          background-image:  linear-gradient(-90deg, rgba($cardColor, 0.1) 0%,rgba($cardColor, 1) 100%);
         }
       }
     }

@@ -50,6 +50,9 @@ export default class {
 			});
 
 		} else {
+			$cookies.remove('SNID');
+			$cookies.remove('SNID_');
+			
 			that.$router.push('/login');
 			that.loggedIn = false;
 		}
