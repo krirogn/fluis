@@ -2,12 +2,12 @@
   <div class="container">
 
     <!-- The header -->
-    <div class="head">
+    <div v-if="header.backdrop_path != undefined" class="head">
       <!-- The background title -->
-      <div class="background" :style="{ backgroundImage: 'url(' + header.img + ')' }"></div>
+      <div class="background" :style="{ backgroundImage: 'url(https://image.tmdb.org/t/p/original' + header.backdrop_path + ')' }"></div>
       <div class="fade">
         <div class="cont">
-          <p class="titleName">{{ header.name }}</p><br>
+          <p class="titleName">{{ header.title }}</p><br>
           <div class="buttons">
             <button type="button" class="btn play">Play Now</button>
             <button type="button" class="btn list">Watch List</button>
@@ -30,10 +30,10 @@
       </div>
     </div>
     <!-- The movies slide -->
-    <div class="t">
+    <div v-if="movies.length != 0" class="t">
       <p class="h">My Movies</p>
       <div class="titles">
-        <div v-for="m in movies" class="mov" :style="{ backgroundImage: 'url(' + m.img + ')' }" @click="select(m)">
+        <div v-for="m in movies" class="mov" :style="{ backgroundImage: 'url(https://image.tmdb.org/t/p/w500' + m.poster_path + ')' }" @click="select(m)">
           <div class="fade">
 
           </div>
@@ -45,7 +45,20 @@
     <div v-if="selected != null" class="card">
       <div class="deselect" @click="deselect"></div>
       <div class="info">
-        <div class="mov mi" :style="{ backgroundImage: 'url(' + selected.img + ')' }"></div>
+        <div class="left">
+          <div class="mov mi" :style="{ backgroundImage: 'url(https://image.tmdb.org/t/p/w500' + selected.poster_path + ')' }"></div>
+        </div>
+        <div class="right">
+          <p class="overview">{{ selected.overview }}</p>
+
+          <div class="bttm">
+            <button type="button" class="btn play">Play Now</button>
+            <button type="button" class="btn list">Watch List</button>
+          </div>
+        </div>
+        <div class="video" :style="{ backgroundImage: 'url(https://image.tmdb.org/t/p/original' + selected.backdrop_path + ')' }">
+          <div class="fade"></div>
+        </div>
       </div>
     </div>
 
@@ -67,23 +80,7 @@ export default Vue.extend({
 
     selected: null,
 
-    header: {
-      //name: "Soul",
-      //img: "https://www.themoviedb.org/t/p/w1066_and_h600_bestv2/kf456ZqeC45XTvo6W9pW5clYKfQ.jpg",
-
-      //name: "My Neightbour Totoro",
-      //img: "https://www.themoviedb.org/t/p/w1066_and_h600_bestv2/fxYazFVeOCHpHwuqGuiqcCTw162.jpg",
-
-      name: "Ratatouille",
-      img: "https://www.themoviedb.org/t/p/original/rpgNpXn02ivV5KLQjQHnFVWyOgU.jpg",
-
-      //name: "Shrek",
-      //img: "https://www.themoviedb.org/t/p/original/hhcAdZBIUSaQ6T2Si5uPjavNXZ1.jpg",
-
-      //name: "The Curious Case of Benjamin Button",
-      //img: "https://www.themoviedb.org/t/p/w1066_and_h600_bestv2/6ZvgyKPAatpcHbVsKknly4K4zC6.jpg",
-      
-    },
+    header: {},
     categories: [
       {
         name: "animation",
@@ -107,7 +104,7 @@ export default Vue.extend({
         //img: "https://www.themoviedb.org/t/p/original/5mUYDoFjDlPmDvnUWSknhYjGBBh.jpg"
       }
     ],
-    movies: [
+    moviesID: [
       "508442",
       "324552",
       "808",
@@ -120,52 +117,8 @@ export default Vue.extend({
       "400160",
       "287947",
       "8392"
-      /*
-      {
-        name: "John Wick 2",
-        img: "https://www.themoviedb.org/t/p/w440_and_h660_face/hXWBc0ioZP3cN4zCu6SN3YHXZVO.jpg"
-      },
-      {
-        name: "Shrek",
-        img: "https://www.themoviedb.org/t/p/w440_and_h660_face/o04jZs5SXhbvhqO4981W7KJXOWZ.jpg"
-      },
-      {
-        name: "The Curious Case of Benjamin Button",
-        img: "https://www.themoviedb.org/t/p/w1280/9H2awZmNisMVJGp362Stv0bfUTs.jpg"
-      },
-      {
-        name: "Captain America: The First Avenger",
-        img: "https://www.themoviedb.org/t/p/w440_and_h660_face/vSNxAJTlD0r02V9sPYpOjqDZXUK.jpg"
-      },
-      {
-        name: "Ratatouille",
-        img: "https://www.themoviedb.org/t/p/w440_and_h660_face/1W8FTjVzNskmTJSfA9eufhyhtMB.jpg"
-      },
-      {
-        name: "Spies in Disguise",
-        img: "https://www.themoviedb.org/t/p/w440_and_h660_face/30YacPAcxpNemhhwX0PVUl9pVA3.jpg"
-      },
-      {
-        name: "Wonder Woman 1984",
-        img: "https://www.themoviedb.org/t/p/w440_and_h660_face/8UlWHLMpgZm9bx6QYh0NFoq67TZ.jpg"
-      },
-      {
-        name: "Joker",
-        img: "https://www.themoviedb.org/t/p/w440_and_h660_face/udDclJoHjfjb8Ekgsd4FDteOkCU.jpg"
-      },
-      {
-        name: "The SpongeBob Movie: Sponge on the Run",
-        img: "https://www.themoviedb.org/t/p/w440_and_h660_face/j8MRnCjuN7kpM8w3B5hM5mrvTaE.jpg"
-      },
-      {
-        name: "Shazam!",
-        img: "https://www.themoviedb.org/t/p/w440_and_h660_face/xoJ2TExRHwrEdcuLglbQskgW5Q9.jpg"
-      },
-      {
-        name: "My Neighbor Totoro",
-        img: "https://www.themoviedb.org/t/p/w440_and_h660_face/ykeaF3Ldz1Kf6sfnOJJH4dW56F4.jpg"
-      }*/
-    ]
+    ],
+    movies: []
   }),
   mounted() {
     fitty('.titleName', {
@@ -182,6 +135,21 @@ export default Vue.extend({
     .catch( (error) => {
       alert(error);
     })
+
+    for (var i = 0; i < this.moviesID.length; i++) {
+      axios({
+        method: 'get',
+        url: "https://api.themoviedb.org/3/movie/"+this.moviesID[i]+"?api_key=a41b38cff983f069924ae937ffdd7631"
+      })
+      .then( (r) => {
+        this.movies.push(r.data);
+
+        this.header = this.movies[Math.floor(Math.random() * this.movies.length)];
+      })
+      .catch( (error) => {
+        alert(error);
+      })
+    }
   },
   methods: {
     select(i: any) {
@@ -213,6 +181,30 @@ export default Vue.extend({
     display: inline-block;
     font-size: 16px;
     text-transform: uppercase;
+  }
+  .play {
+    background-color: purple;
+    color: white;
+
+    margin-right: 10px;
+  }
+  .play:hover {
+    background-color: rgba($color: white, $alpha: 0.0);
+    border: purple solid 2px;
+    padding: 8px 13px;
+    cursor: pointer;
+  }
+
+  .list {
+    background-color: white;
+    color: black;
+  }
+  .list:hover {
+    background-color: rgba($color: white, $alpha: 0.0);
+    border: white solid 2px;
+    color: white;
+    padding: 8px 13px;
+    cursor: pointer;
   }
 
   $margin: 20px;
@@ -271,29 +263,6 @@ export default Vue.extend({
 
         .buttons {
           display: inline-block;
-
-          .play {
-            background-color: purple;
-            color: white;
-          }
-          .play:hover {
-            background-color: rgba($color: white, $alpha: 0.0);
-            border: purple solid 2px;
-            padding: 8px 13px;
-            cursor: pointer;
-          }
-
-          .list {
-            background-color: white;
-            color: black;
-          }
-          .list:hover {
-            background-color: rgba($color: white, $alpha: 0.0);
-            border: white solid 2px;
-            color: white;
-            padding: 8px 13px;
-            cursor: pointer;
-          }
         }
       }
     }
@@ -420,6 +389,7 @@ export default Vue.extend({
       white-space: nowrap;
 
       margin-bottom: 20px;
+      padding-left: $margin;
     }
   }
 
@@ -451,15 +421,60 @@ export default Vue.extend({
 
       border-radius: 20px 20px 0 0;
 
-      background-color: #1a1a1a;
+      background-color: rgb(26, 26, 26);
 
-      .mi {
-        position: relative;
-        top: 50%;
-        transform: translateY(-50%);
-        left: 20px;
+      .left {
+        height: 100%;
 
-        cursor: default;
+        float: left;
+
+        .mi {
+          position: relative;
+          top: 50%;
+          transform: translateY(-50%);
+          left: 20px;
+
+          cursor: default;
+        }
+      }
+
+      .right {
+        width: 35%;
+        height: 100%;
+
+        float: left;
+
+        padding: $margin;
+
+        .overview {
+          color: white;
+        }
+
+        .bttm {
+          position: absolute;
+          bottom: $margin;
+        }
+      }
+
+      .video {
+        width: 60%;
+        height: 100%;
+
+        position: absolute;
+        right: 0;
+        top: 0;
+        z-index: -1;
+
+        background-size: cover;
+        background-repeat: no-repeat;
+        background-position: center top;
+
+        .fade {
+          width: 100%;
+          height: 100%;
+
+          background-image:  linear-gradient(-90deg, rgba(26,26,26, 0.1) 0%,rgba(26,26,26,1) 100%);
+        }
       }
     }
   }
