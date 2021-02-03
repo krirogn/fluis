@@ -22,13 +22,13 @@
     </div>
 
     <!-- The category slide -->
-    <div class="categories">
+    <!--div class="categories">
       <div v-for="c in categories" class="cat" :style="{ backgroundImage: 'url(' + c.img + ')' }">
         <div class="fade">
           <p>{{ c.name }}</p>
         </div>
       </div>
-    </div>
+    </div-->
     <!-- The movies slide -->
     <div v-if="movies.length != 0" class="t">
       <p class="h">My Movies</p>
@@ -56,9 +56,12 @@
             <button type="button" class="btn list">Watch List</button>
           </div>
         </div>
-        <div class="video" :style="{ backgroundImage: 'url(https://image.tmdb.org/t/p/original' + selected.backdrop_path + ')' }">
+        <!--div class="video" :style="{ backgroundImage: 'url(https://image.tmdb.org/t/p/original' + selected.backdrop_path + ')' }">
           <div class="fade"></div>
-        </div>
+        </div-->
+        <video class="video" ref="selectedVideoPlayer">
+          <div class="fade"></div>
+        </video>
       </div>
     </div>
 
@@ -71,7 +74,7 @@ import Vue from 'vue'
 import axios from '~/plugins/axios'
 
 /// Enables the HJSON format parser
-var Hjson = require('hjson')
+const Hjson = require('hjson')
 import fitty from 'fitty'
 
 export default Vue.extend({
@@ -79,6 +82,7 @@ export default Vue.extend({
     config: Hjson.parse(require('../fluis.config.hjson').default),
 
     selected: null,
+    selectedVideo: "",
 
     header: {},
     categories: [
@@ -142,6 +146,7 @@ export default Vue.extend({
         url: "https://api.themoviedb.org/3/movie/"+this.moviesID[i]+"?api_key=a41b38cff983f069924ae937ffdd7631"
       })
       .then( (r) => {
+        //@ts-ignore
         this.movies.push(r.data);
 
         this.header = this.movies[Math.floor(Math.random() * this.movies.length)];
@@ -154,6 +159,31 @@ export default Vue.extend({
   methods: {
     select(i: any) {
       this.selected = i;
+      
+      axios({
+        method: 'get',
+        url: "https://api.themoviedb.org/3/movie/"+i.id+"/videos?api_key=a41b38cff983f069924ae937ffdd7631"
+      })
+      .then( (r) => {
+        axios({
+          method: 'get',
+          url: "ytURL?id="+r.data.results[0].key
+        })
+        .then( (u) => {
+          this.selectedVideo = u.data;
+
+          this.$refs.selectedVideoPlayer.src = u.data;
+          this.$refs.selectedVideoPlayer.muted = true;
+          this.$refs.selectedVideoPlayer.play();
+        })
+        .catch( (error) => {
+          alert(error);
+        })
+      })
+      .catch( (error) => {
+        alert(error);
+      })
+      
     },
     deselect() {
       this.selected = null;
@@ -305,7 +335,6 @@ export default Vue.extend({
       height: 100%;
 
       display: inline-block;
-      transform: scale(0.95);
 
       border-radius: 20px;
       cursor: pointer;
@@ -337,18 +366,18 @@ export default Vue.extend({
       }
     }
     .cat:hover, .cat:focus {
-      transform: scale(1);
+      //transform: scale(1);
     }
   }
 
   $movSpace: 20px;
   $movWidth: calc(15vw - (#{$movSpace} / 2));
+  $movMovement: 20px;
   .mov {
     width: $movWidth;
     height: calc(#{$movWidth} * (16/9));
 
     display: inline-block;
-    transform: scale(0.95);
 
     border-radius: 20px;
     cursor: pointer;
@@ -358,17 +387,20 @@ export default Vue.extend({
     background-position: center top;
 
     margin-right: $movSpace;
+
+    transition: transform 0.5s ease;
+    transform: translateY(0px);
   }
   .mov:hover, .mov:focus {
-    transform: scale(1);
+    transform: translateY(-$movMovement);
   }
 
   .t {
     width: 100%;
     position: relative;
     left: 0;
-    top: calc(50vh + #{$categoriesHeight} + 20px);
-    //top: calc(50% + 20px + #{$categoriesHeight});
+    top: calc(50vh + 40px);
+    //top: calc(50vh + #{$categoriesHeight} + 20px);
 
     .h {
       text-align: left;
@@ -381,6 +413,7 @@ export default Vue.extend({
       padding-left: $margin;
     }
 
+    $titlesMarginTop: 20px;
     .titles {
       width: 100%;
 
@@ -388,8 +421,10 @@ export default Vue.extend({
       overflow-x: auto;
       white-space: nowrap;
 
-      margin-bottom: 20px;
+      margin-top: -$titlesMarginTop;
+      margin-bottom: $titlesMarginTop;
       padding-left: $margin;
+      padding-top: 20px;
     }
   }
 
