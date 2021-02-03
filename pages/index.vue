@@ -56,12 +56,11 @@
             <button type="button" class="btn list">Watch List</button>
           </div>
         </div>
-        <!--div class="video" :style="{ backgroundImage: 'url(https://image.tmdb.org/t/p/original' + selected.backdrop_path + ')' }">
+        <!--div class="bgImg" :style="{ backgroundImage: 'url(https://image.tmdb.org/t/p/original' + selected.backdrop_path + ')' }">
           <div class="fade"></div>
         </div-->
-        <video class="video" ref="selectedVideoPlayer">
-          <div class="fade"></div>
-        </video>
+        <div class="videoDiv"><video class="video" ref="selectedVideoPlayer"></video></div>
+        <div class="fade" ref="fadeElem" :style="{ width: selectedVideoWidth }"></div>
       </div>
     </div>
 
@@ -82,7 +81,7 @@ export default Vue.extend({
     config: Hjson.parse(require('../fluis.config.hjson').default),
 
     selected: null,
-    selectedVideo: "",
+    selectedVideoWidth: "90%",
 
     header: {},
     categories: [
@@ -170,11 +169,15 @@ export default Vue.extend({
           url: "ytURL?id="+r.data.results[0].key
         })
         .then( (u) => {
-          this.selectedVideo = u.data;
+          if (this.$refs.selectedVideoPlayer) {
+            this.$refs.selectedVideoPlayer.src = u.data;
+            this.$refs.selectedVideoPlayer.muted = true;
 
-          this.$refs.selectedVideoPlayer.src = u.data;
-          this.$refs.selectedVideoPlayer.muted = true;
-          this.$refs.selectedVideoPlayer.play();
+            this.$refs.selectedVideoPlayer.addEventListener('loadeddata', () => {
+              this.$refs.selectedVideoPlayer.play();
+              this.selectedVideoWidth = this.$refs.selectedVideoPlayer.offsetWidth+"px";
+            }, false);
+          }
         })
         .catch( (error) => {
           alert(error);
@@ -492,7 +495,7 @@ export default Vue.extend({
         }
       }
 
-      .video {
+      .bgImg {
         width: 60%;
         height: 100%;
 
@@ -512,6 +515,33 @@ export default Vue.extend({
           background-image:  linear-gradient(-90deg, rgba($cardColor, 0.1) 0%,rgba($cardColor, 1) 100%);
         }
       }
+
+      .videoDiv {
+        height: 100%;
+
+        position: absolute;
+        right: 0;
+        top: 0;
+        z-index: -1;
+
+        border-radius: 0px 20px 0px 0px;
+        overflow: hidden;
+
+        .video {
+          height: 100%;
+        }
+      }
+
+      .fade {
+          height: 100%;
+
+          position: absolute;
+          right: 0;
+          top: 0;
+          z-index: -1;
+
+          background-image:  linear-gradient(-90deg, rgba($cardColor, 0.1) 0%, rgba($cardColor, 1) calc(100% - 10px), rgba($cardColor, 1) 100%);
+        }
     }
   }
 }
