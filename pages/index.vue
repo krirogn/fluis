@@ -42,27 +42,29 @@
     </div>
 
     <!-- The title card -->
-    <div v-if="selected != null" class="card">
-      <div class="deselect" @click="deselect"></div>
-      <div class="info">
-        <div class="left">
-          <div class="mov mi" :style="{ backgroundImage: 'url(https://image.tmdb.org/t/p/w500' + selected.poster_path + ')' }"></div>
-        </div>
-        <div class="right">
-          <p class="overview">{{ selected.overview }}</p>
-
-          <div class="bttm">
-            <button type="button" class="btn play">Play Now</button>
-            <button type="button" class="btn list">Watch List</button>
+    <transition name="infoSlide">
+      <div v-if="selected != null" class="card">
+        <div class="deselect" @click="deselect"></div>
+        <div class="info">
+          <div class="left">
+            <div class="mov mi" :style="{ backgroundImage: 'url(https://image.tmdb.org/t/p/w500' + selected.poster_path + ')' }"></div>
           </div>
+          <div class="right">
+            <p class="overview">{{ selected.overview }}</p>
+
+            <div class="bttm">
+              <button type="button" class="btn play">Play Now</button>
+              <button type="button" class="btn list">Watch List</button>
+            </div>
+          </div>
+          <!--div class="bgImg" :style="{ backgroundImage: 'url(https://image.tmdb.org/t/p/original' + selected.backdrop_path + ')' }">
+            <div class="fade"></div>
+          </div-->
+          <div class="videoDiv"><video class="video" ref="selectedVideoPlayer" loop></video></div>
+          <div class="fade" ref="fadeElem" :style="{ width: selectedVideoWidth }"></div>
         </div>
-        <!--div class="bgImg" :style="{ backgroundImage: 'url(https://image.tmdb.org/t/p/original' + selected.backdrop_path + ')' }">
-          <div class="fade"></div>
-        </div-->
-        <div class="videoDiv"><video class="video" ref="selectedVideoPlayer"></video></div>
-        <div class="fade" ref="fadeElem" :style="{ width: selectedVideoWidth }"></div>
       </div>
-    </div>
+    </transition>
 
   </div>
 </template>
@@ -174,6 +176,7 @@ export default Vue.extend({
             this.$refs.selectedVideoPlayer.muted = true;
 
             this.$refs.selectedVideoPlayer.addEventListener('loadeddata', () => {
+              this.$refs.selectedVideoPlayer.currentTime = 10;
               this.$refs.selectedVideoPlayer.play();
               this.selectedVideoWidth = this.$refs.selectedVideoPlayer.offsetWidth+"px";
             }, false);
@@ -402,18 +405,18 @@ export default Vue.extend({
     width: 100%;
     position: relative;
     left: 0;
-    top: calc(50vh + 40px);
+    top: calc(50vh + 40px + 40px);
     //top: calc(50vh + #{$categoriesHeight} + 20px);
 
     .h {
       text-align: left;
-      font-size: 300%;
+      font-size: 36px;
       font-family: Arial, Helvetica, sans-serif;
       text-transform: capitalize;
       color: white;
 
-      margin-bottom: 5px;
-      padding-left: $margin;
+      margin-bottom: 35px;
+      padding-left: calc(#{$margin} * 3);
     }
 
     $titlesMarginTop: 20px;
@@ -426,12 +429,14 @@ export default Vue.extend({
 
       margin-top: -$titlesMarginTop;
       margin-bottom: $titlesMarginTop;
-      padding-left: $margin;
+      padding-left: calc(#{$margin} * 3);
+      padding-right: calc(#{$margin} * 3);
       padding-top: 20px;
     }
   }
 
   $cardColor: #111111;
+  //$cardColor: #202020;
   .card {
     width: 100vw;
     height: 100vh;
@@ -529,6 +534,7 @@ export default Vue.extend({
 
         .video {
           height: 100%;
+          transform: scale(1.5);
         }
       }
 
@@ -544,5 +550,21 @@ export default Vue.extend({
         }
     }
   }
+}
+
+/// Animations
+$infoSlideTime: .5s;
+.infoSlide-enter-active {
+  transition: all $infoSlideTime ease-out;
+}
+.infoSlide-enter {
+  transform: translateY(100%);
+}
+
+.infoSlide-leave-active {
+  transition: all $infoSlideTime ease-in;
+}
+.infoSlide-leave-to {
+  transform: translateY(100%);
 }
 </style>
