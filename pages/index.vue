@@ -4,7 +4,7 @@
     <!-- The header -->
     <div v-if="header.backdrop_path != null" class="head">
       <!-- The background title -->
-      <div class="background" :style="{ backgroundImage: 'url(https://image.tmdb.org/t/p/original' + header.backdrop_path + ')' }"></div>
+      <div class="background" :style="{ backgroundImage: dbCmsHigh + header.backdrop_path + ')' }"></div>
       <div class="fade">
         <div class="cont">
           <p class="titleName" ref="titleNameElem">{{ header.title }}</p><br>
@@ -21,6 +21,7 @@
       </div>
     </div>
 
+
     <!-- The category slide -->
     <!--div class="categories">
       <div v-for="c in categories" class="cat" :style="{ backgroundImage: 'url(' + c.img + ')' }">
@@ -29,17 +30,27 @@
         </div>
       </div>
     </div-->
+
     <!-- The movies slide -->
     <div v-if="movies.length != 0" class="t">
       <p class="h">My Movies</p>
       <div class="titles">
-        <div v-for="m in movies" class="mov" :style="{ backgroundImage: 'url(https://image.tmdb.org/t/p/w500' + m.poster_path + ')' }" @click="select(m)">
-          <div class="fade">
-
-          </div>
+        <div v-for="m in movies" class="mov" :style="{ backgroundImage: dbCmsLow + m.poster_path + ')' }" @click="select(m, 'movie')">
+          <div class="fade"></div>
         </div>
       </div>
     </div>
+
+    <!-- The show slide -->
+    <div v-if="shows.length != 0" class="t" style="margin-top:60px;">
+      <p class="h">My Shows</p>
+      <div class="titles">
+        <div v-for="s in shows" class="mov" :style="{ backgroundImage: dbCmsLow + s.poster_path + ')' }" @click="select(s, 'tv')">
+          <div class="fade"></div>
+        </div>
+      </div>
+    </div>
+
 
     <!-- The title card -->
     <transition name="infoSlide">
@@ -47,7 +58,7 @@
         <div class="deselect" @click="deselect"></div>
         <div class="info">
           <div class="left">
-            <div class="mov mi" :style="{ backgroundImage: 'url(https://image.tmdb.org/t/p/w500' + selected.poster_path + ')' }"></div>
+            <div class="mov mi" :style="{ backgroundImage: dbCmsLow + selected.poster_path + ')' }"></div>
           </div>
           <div class="right">
             <p class="overview">{{ selected.overview }}</p>
@@ -57,11 +68,13 @@
               <button type="button" class="btn list">Watch List</button>
             </div>
           </div>
-          <!--div class="bgImg" :style="{ backgroundImage: 'url(https://image.tmdb.org/t/p/original' + selected.backdrop_path + ')' }">
+          <div v-if="!videoEnabled" class="bgImg" :style="{ backgroundImage: dbCmsHigh + selected.backdrop_path + ')' }">
             <div class="fade"></div>
-          </div-->
-          <div class="videoDiv"><video class="video" ref="selectedVideoPlayer" loop></video></div>
-          <div class="fade" ref="fadeElem" :style="{ width: selectedVideoWidth }"></div>
+          </div>
+          <div v-else>
+            <div class="videoDiv"><video class="video" ref="selectedVideoPlayer" loop></video></div>
+            <div class="fade" ref="fadeElem" :style="{ width: selectedVideoWidth }"></div>
+          </div>
         </div>
       </div>
     </transition>
@@ -75,40 +88,22 @@ import Vue from 'vue'
 import axios from '~/plugins/axios'
 
 /// Enables the HJSON format parser
-const Hjson = require('hjson')
+//import Hjson from 'hjson'
 import fitty from 'fitty'
 
 export default Vue.extend({
   data: () => ({
-    config: Hjson.parse(require('../fluis.config.hjson').default),
-
     selected: null,
     selectedVideoWidth: "90%",
 
+    dbCmsLow: 'url(https://image.tmdb.org/t/p/w500',
+    dbCmsHigh: 'url(https://image.tmdb.org/t/p/original',
+    videoEnabled: true,
+
     header: {},
-    categories: [
-      {
-        name: "animation",
-        img: "https://www.themoviedb.org/t/p/original/r39CgvHn1gVEtRGdBdDpC3a6c81.jpg"
-      },
-      {
-        name: "action",
-        img: "https://www.themoviedb.org/t/p/original/2nGKhDksmoDdkllXm5D5gy2urCg.jpg"
-      },
-      {
-        name: "sci-fi",
-        img: "https://www.themoviedb.org/t/p/original/jn52me8AagfNt7r84SgQbV0R9ZG.jpg"
-      },
-      {
-        name: "fantasy",
-        img: "https://www.themoviedb.org/t/p/original/x4NZ2JSb8ojOK0NPOScagYn6sQK.jpg"
-      },
-      {
-        name: "anime",
-        img: "https://www.themoviedb.org/t/p/original/kP5duNJEbTfXpBs6CITsaZ88pQi.jpg"
-        //img: "https://www.themoviedb.org/t/p/original/5mUYDoFjDlPmDvnUWSknhYjGBBh.jpg"
-      }
-    ],
+    categories: [],
+
+    /// The movie info
     moviesID: [
       "508442",
       "324552",
@@ -123,18 +118,29 @@ export default Vue.extend({
       "287947",
       "8392"
     ],
-    movies: []
+    movies: [],
+
+    /// The show info
+    showsID: [
+      "246",
+      "1418",
+      "6357",
+      "67075"
+    ],
+    shows: []
   }),
   mounted() {
-    this.getTitleData();
+    this.getMovieData();
+    this.getShowData();
   },
   methods: {
-    select(i: any) {
+    /// When a title is selected
+    select(i: any, type: string) {
       this.selected = i;
       
       axios({
         method: 'get',
-        url: "https://api.themoviedb.org/3/movie/"+i.id+"/videos?api_key=a41b38cff983f069924ae937ffdd7631"
+        url: "https://api.themoviedb.org/3/"+type+"/"+i.id+"/videos?api_key=a41b38cff983f069924ae937ffdd7631"
       })
       .then( (r) => {
         axios({
@@ -143,18 +149,26 @@ export default Vue.extend({
         })
         .then( (u) => {
           if (this.$refs.selectedVideoPlayer) {
+            //@ts-ignore
             this.$refs.selectedVideoPlayer.src = u.data;
+            //@ts-ignore
             this.$refs.selectedVideoPlayer.muted = true;
 
+            //@ts-ignore
             this.$refs.selectedVideoPlayer.addEventListener('loadeddata', () => {
+              this.fade(this.$refs.selectedVideoPlayer as HTMLElement);
+
+              //@ts-ignore
               this.$refs.selectedVideoPlayer.currentTime = 10;
+              //@ts-ignore
               this.$refs.selectedVideoPlayer.play();
+              //@ts-ignore
               this.selectedVideoWidth = this.$refs.selectedVideoPlayer.offsetWidth+"px";
             }, false);
           }
         })
         .catch( (error) => {
-          alert(error);
+          this.videoEnabled = false;
         })
       })
       .catch( (error) => {
@@ -162,10 +176,26 @@ export default Vue.extend({
       })
       
     },
+    /// When a title is deselected
     deselect() {
       this.selected = null;
+      this.videoEnabled = true;
     },
-    getTitleData() {
+
+    /// Helpers
+    fade(element: HTMLElement) {
+      var op = 0;
+      var timer = setInterval(function() {
+          if (op >= 1) clearInterval(timer);
+          element.style.opacity = op as any as string;
+          element.style.filter = 'alpha(opacity=' + op * 100 + ")";
+          op += op * 0.1 || 0.1;
+      }, 50);
+    },
+
+    /// Fetch from TMDB
+    /// Get movie data
+    getMovieData() {
       for (var i = 0; i < this.moviesID.length; i++) {
         axios({
           method: 'get',
@@ -186,8 +216,7 @@ export default Vue.extend({
           
           setTimeout( () => {
             var f = fitty('.titleName', {
-              //multiLine: true,
-              multiLine: false,
+              multiLine: true,
               minSize: 40,
             });
             f[0].fit();
@@ -197,6 +226,22 @@ export default Vue.extend({
         }
       }
       waitForElement();
+    },
+    /// Get show data
+    getShowData() {
+      for (var i = 0; i < this.showsID.length; i++) {
+        axios({
+          method: 'get',
+          url: "https://api.themoviedb.org/3/tv/"+this.showsID[i]+"?api_key=a41b38cff983f069924ae937ffdd7631"
+        })
+        .then( (r) => {
+          //@ts-ignore
+          this.shows.push(r.data);
+        })
+        .catch( (error) => {
+          alert(error);
+        })
+      }
     }
   }
 })
@@ -376,9 +421,9 @@ export default Vue.extend({
         }
       }
     }
-    .cat:hover, .cat:focus {
-      //transform: scale(1);
-    }
+    /*.cat:hover, .cat:focus {
+      transform: scale(1);
+    }*/
   }
 
   $movSpace: 20px;
