@@ -2,12 +2,12 @@
   <div class="container">
 
     <!-- The header -->
-    <div v-if="header.backdrop_path != undefined" class="head">
+    <div v-if="header.backdrop_path != null" class="head">
       <!-- The background title -->
       <div class="background" :style="{ backgroundImage: 'url(https://image.tmdb.org/t/p/original' + header.backdrop_path + ')' }"></div>
       <div class="fade">
         <div class="cont">
-          <p class="titleName">{{ header.title }}</p><br>
+          <p class="titleName" ref="titleNameElem">{{ header.title }}</p><br>
           <div class="buttons">
             <button type="button" class="btn play">Play Now</button>
             <button type="button" class="btn list">Watch List</button>
@@ -126,36 +126,7 @@ export default Vue.extend({
     movies: []
   }),
   mounted() {
-    fitty('.titleName', {
-      multiLine: true
-    });
-
-    axios({
-      method: 'get',
-      url: "v"
-    })
-    .then( (r) => {
-      //alert(r.data);
-    })
-    .catch( (error) => {
-      alert(error);
-    })
-
-    for (var i = 0; i < this.moviesID.length; i++) {
-      axios({
-        method: 'get',
-        url: "https://api.themoviedb.org/3/movie/"+this.moviesID[i]+"?api_key=a41b38cff983f069924ae937ffdd7631"
-      })
-      .then( (r) => {
-        //@ts-ignore
-        this.movies.push(r.data);
-
-        this.header = this.movies[Math.floor(Math.random() * this.movies.length)];
-      })
-      .catch( (error) => {
-        alert(error);
-      })
-    }
+    this.getTitleData();
   },
   methods: {
     select(i: any) {
@@ -193,6 +164,39 @@ export default Vue.extend({
     },
     deselect() {
       this.selected = null;
+    },
+    getTitleData() {
+      for (var i = 0; i < this.moviesID.length; i++) {
+        axios({
+          method: 'get',
+          url: "https://api.themoviedb.org/3/movie/"+this.moviesID[i]+"?api_key=a41b38cff983f069924ae937ffdd7631"
+        })
+        .then( (r) => {
+          //@ts-ignore
+          this.movies.push(r.data);
+        })
+        .catch( (error) => {
+          alert(error);
+        })
+      }
+
+      var waitForElement = () => {
+        if(this.movies.length == this.moviesID.length) {
+          this.header = this.movies[Math.floor(Math.random() * this.movies.length)];
+          
+          setTimeout( () => {
+            var f = fitty('.titleName', {
+              //multiLine: true,
+              multiLine: false,
+              minSize: 40,
+            });
+            f[0].fit();
+          }, 250);
+        } else{
+          setTimeout(waitForElement, 250);
+        }
+      }
+      waitForElement();
     }
   }
 })
@@ -283,10 +287,11 @@ export default Vue.extend({
         margin-left: calc(#{$margin} * 2);
         
         .titleName {
-          width: 50%;
+          width: 100%;
+          height: 100%;
 
           text-align: left;
-          font-size: 5vw;
+          //font-size: 5vw;
           font-family: Arial, Helvetica, sans-serif;
           //font-weight: bold;
           text-transform: uppercase;
