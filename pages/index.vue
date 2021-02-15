@@ -7,10 +7,10 @@
       <div class="background" :style="{ backgroundImage: dbCmsHigh + header.backdrop_path + ')' }"></div>
       <div class="fade">
         <div class="cont">
-          <p class="titleName" ref="titleNameElem">{{ header.title }}</p><br>
+          <p class="titleName" ref="titleNameElem">{{ headerName }}</p><br>
           <div class="buttons">
-            <button type="button" class="btn play">Play Now</button>
-            <button type="button" class="btn list">Watch List</button>
+            <button type="button" @click="play(header)" class="btn play">Play Now</button>
+            <!--button type="button" class="btn list">Watch List</button-->
           </div>
         </div>
       </div>
@@ -64,8 +64,8 @@
             <p class="overview">{{ selected.overview }}</p>
 
             <div class="bttm">
-              <button type="button" class="btn play">Play Now</button>
-              <button type="button" class="btn list">Watch List</button>
+              <button type="button" @click="play(selected)" class="btn play">Play Now</button>
+              <!--button type="button" class="btn list">Watch List</button-->
             </div>
           </div>
           <div v-if="!videoEnabled" class="bgImg" :style="{ backgroundImage: dbCmsHigh + selected.backdrop_path + ')' }">
@@ -85,13 +85,24 @@
 <script lang="ts">
 /// Standard Vue/Nuxt modules
 import Vue from 'vue'
+import VueCookies from 'vue-cookies'
+Vue.use(VueCookies)
+VueCookies.config('7d')
 import axios from '~/plugins/axios'
 
 /// Enables the HJSON format parser
 //import Hjson from 'hjson'
 import fitty from 'fitty'
 
+/// Components
+import slide from '~/components/slide.vue'
+import title from '~/components/title.vue'
+
 export default Vue.extend({
+  components: {
+    slide,
+    title
+  },
   data: () => ({
     selected: null,
     selectedVideoWidth: "90%",
@@ -101,10 +112,11 @@ export default Vue.extend({
     videoEnabled: true,
 
     header: {},
+    headerName: "",
     categories: [],
 
     /// The movie info
-    moviesID: [
+    moviesID: [],/*[
       "508442",
       "324552",
       "808",
@@ -117,21 +129,79 @@ export default Vue.extend({
       "400160",
       "287947",
       "8392"
-    ],
+    ],*/
     movies: [],
 
     /// The show info
-    showsID: [
+    showsID: [],/*[
       "246",
       "1418",
       "6357",
-      "67075"
-    ],
+      "67075",
+      "45790",
+      "65930",
+      "62565",
+      "80475",
+      "91056",
+      "6636",
+      "60625",
+      "87083",
+      "72305",
+      "10283",
+      "48891",
+      "63174",
+      "46952",
+      "63926",
+      "66573",
+      "86831"
+    ],*/
     shows: []
   }),
   mounted() {
     this.getMovieData();
     this.getShowData();
+
+    var waitForElement = () => {
+      if (this.movies.length == this.moviesID.length && this.moviesID.length > 0 &&
+          this.shows.length == this.showsID.length && this.showsID.length > 0) {
+        
+        var mH = this.movies[Math.floor(Math.random() * this.movies.length)];
+        var sH = this.shows[Math.floor(Math.random() * this.shows.length)];
+        
+        if (mH == undefined && sH == undefined) {
+          alert("You have no titles");
+        } else if (mH != undefined && sH == undefined) {
+          this.header = mH;
+          //@ts-ignore
+          this.headerName = mH.title;
+        } else if (mH == undefined && sH != undefined) {
+          this.header = sH;
+          //@ts-ignore
+          this.headerName = sH.name;
+        } else if (mH != undefined && sH != undefined) {
+          if (Math.random() < 0.5) {
+            this.header = mH;
+            //@ts-ignore
+            this.headerName = mH.title;
+          } else {
+            this.header = sH;
+            //@ts-ignore
+            this.headerName = sH.name;
+          }
+        }
+        
+        setTimeout( () => {
+          var f = fitty('.titleName', {
+            multiLine: true,
+            minSize: 40,
+          });
+          f[0].fit();
+        }, 250);
+      } else {
+        setTimeout(waitForElement, 250);
+      }
+    }
+    waitForElement();
   },
   methods: {
     /// When a title is selected
@@ -172,7 +242,7 @@ export default Vue.extend({
         })
       })
       .catch( (error) => {
-        alert(error);
+        this.videoEnabled = false;
       })
       
     },
@@ -196,52 +266,69 @@ export default Vue.extend({
     /// Fetch from TMDB
     /// Get movie data
     getMovieData() {
-      for (var i = 0; i < this.moviesID.length; i++) {
-        axios({
-          method: 'get',
-          url: "https://api.themoviedb.org/3/movie/"+this.moviesID[i]+"?api_key=a41b38cff983f069924ae937ffdd7631"
-        })
-        .then( (r) => {
-          //@ts-ignore
-          this.movies.push(r.data);
-        })
-        .catch( (error) => {
-          alert(error);
-        })
-      }
+      axios({
+        method: 'get',
+        //@ts-ignore
+        url: "getMoviesID?login="+$cookies.get('SNID')
+      })
+      .then( (r) => {
+        //@ts-ignore
+        this.moviesID = r.data;
 
-      var waitForElement = () => {
-        if(this.movies.length == this.moviesID.length) {
-          this.header = this.movies[Math.floor(Math.random() * this.movies.length)];
-          
-          setTimeout( () => {
-            var f = fitty('.titleName', {
-              multiLine: true,
-              minSize: 40,
-            });
-            f[0].fit();
-          }, 250);
-        } else{
-          setTimeout(waitForElement, 250);
+        for (var i = 0; i < this.moviesID.length; i++) {
+          axios({
+            method: 'get',
+            url: "https://api.themoviedb.org/3/movie/"+this.moviesID[i]+"?api_key=a41b38cff983f069924ae937ffdd7631"
+          })
+          .then( (r) => {
+            //@ts-ignore
+            this.movies.push(r.data);
+          })
+          .catch( (error) => {
+            alert(error);
+          })
         }
-      }
-      waitForElement();
+      })
+      .catch( (error) => {
+        alert(error);
+      })
     },
     /// Get show data
     getShowData() {
-      for (var i = 0; i < this.showsID.length; i++) {
-        axios({
-          method: 'get',
-          url: "https://api.themoviedb.org/3/tv/"+this.showsID[i]+"?api_key=a41b38cff983f069924ae937ffdd7631"
-        })
-        .then( (r) => {
-          //@ts-ignore
-          this.shows.push(r.data);
-        })
-        .catch( (error) => {
-          alert(error);
-        })
-      }
+      /// 
+      axios({
+        method: 'get',
+        //@ts-ignore
+        url: "getShowsID?login="+$cookies.get('SNID')
+      })
+      .then( (r) => {
+        //@ts-ignore
+        this.showsID = r.data;
+
+        /// Get the info from the IDs
+        for (var i = 0; i < this.showsID.length; i++) {
+          axios({
+            method: 'get',
+            url: "https://api.themoviedb.org/3/tv/"+this.showsID[i]+"?api_key=a41b38cff983f069924ae937ffdd7631"
+          })
+          .then( (r) => {
+            //@ts-ignore
+            this.shows.push(r.data);
+          })
+          .catch( (error) => {
+            alert(error);
+          })
+        }
+      })
+      .catch( (error) => {
+        alert(error);
+      })
+    },
+    play(title: any) {
+      var type = "s";
+      (this.movies.includes(title) == true) ? type = "m" : "s";
+
+      this.$router.push('/play/'+type+'/'+title.id);
     }
   }
 })
@@ -465,7 +552,8 @@ export default Vue.extend({
       text-transform: capitalize;
       color: white;
 
-      margin-bottom: 35px;
+      //margin-bottom: 35px;
+      margin-bottom: 25px;
       padding-left: calc(#{$margin} * 3);
     }
 
