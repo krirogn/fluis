@@ -21,7 +21,7 @@ For detailed explanation on how things work, check out [Nuxt.js docs](https://nu
 
 ## Roadmap
 ### Supported platforms
-- [ ] Web
+- [X] Web
 - [ ] iPhone/Android
 - [ ] Chrome Cast
 - [ ] [WebOS](http://webostv.developer.lge.com/)
