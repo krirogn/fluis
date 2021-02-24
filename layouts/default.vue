@@ -14,6 +14,7 @@
 import Vue from 'vue'
 import VueCookies from 'vue-cookies'
 Vue.use(VueCookies)
+//@ts-ignore
 VueCookies.config('7d')
 
 import Login from '~/assets/modules/Login'

@@ -4,7 +4,7 @@
     <!-- The header -->
     <div v-if="header.backdrop_path != null" class="head">
       <!-- The background title -->
-      <div class="background" :style="{ backgroundImage: dbCmsHigh + header.backdrop_path + ')' }"></div>
+      <div class="background" :style="{ backgroundImage: 'url(' + dbCmsHigh + header.backdrop_path + ')' }"></div>
       <div class="fade">
         <div class="cont">
           <p class="titleName" ref="titleNameElem">{{ headerName }}</p><br>
@@ -22,34 +22,15 @@
     </div>
 
 
-    <!-- The category slide -->
-    <!--div class="categories">
-      <div v-for="c in categories" class="cat" :style="{ backgroundImage: 'url(' + c.img + ')' }">
-        <div class="fade">
-          <p>{{ c.name }}</p>
-        </div>
-      </div>
-    </div-->
-
     <!-- The movies slide -->
-    <div v-if="movies.length != 0" class="t">
-      <p class="h">My Movies</p>
-      <div class="titles">
-        <div v-for="m in movies" class="mov" :style="{ backgroundImage: dbCmsLow + m.poster_path + ')' }" @click="select(m, 'movie')">
-          <div class="fade"></div>
-        </div>
-      </div>
-    </div>
+    <slide v-if="movies.length != 0" title="My Movies">
+      <card v-for="m in movies" :image="dbCmsLow + m.poster_path" @click="select(m, 'movie')" />
+    </slide>
 
     <!-- The show slide -->
-    <div v-if="shows.length != 0" class="t" style="margin-top:60px;">
-      <p class="h">My Shows</p>
-      <div class="titles">
-        <div v-for="s in shows" class="mov" :style="{ backgroundImage: dbCmsLow + s.poster_path + ')' }" @click="select(s, 'tv')">
-          <div class="fade"></div>
-        </div>
-      </div>
-    </div>
+    <slide v-if="shows.length != 0" title="My Shows" style="margin-top:60px;">
+      <card v-for="s in shows" :image="dbCmsLow + s.poster_path" @click="select(s, 'tv')" />
+    </slide>
 
 
     <!-- The title card -->
@@ -57,18 +38,27 @@
       <div v-if="selected != null" class="card">
         <div class="deselect" @click="deselect"></div>
         <div class="info">
+          
           <div class="left">
-            <div class="mov mi" :style="{ backgroundImage: dbCmsLow + selected.poster_path + ')' }"></div>
+            <card class="mi" :image="dbCmsLow + selected.poster_path" />
           </div>
+
           <div class="right">
             <p class="overview">{{ selected.overview }}</p>
+
+            <div v-if="selectedType == 'tv'" class="episode-select">
+              <button type="button" @click="seasonDropdown()" class="btn season-select">{{ selectedSeason }}</button>
+              <div v-if="showSeasonDropdown" ref="seasonDropdownContent" class="season-dropdown">
+                <a v-for="s in seasons" @click="seasonSelect(s)">{{ s }}</a>
+              </div>
+            </div>
 
             <div class="bttm">
               <button type="button" @click="play(selected)" class="btn play">Play Now</button>
               <!--button type="button" class="btn list">Watch List</button-->
             </div>
           </div>
-          <div v-if="!videoEnabled" class="bgImg" :style="{ backgroundImage: dbCmsHigh + selected.backdrop_path + ')' }">
+          <div v-if="!videoEnabled" class="bgImg" :style="{ backgroundImage: 'url(' + dbCmsHigh + selected.backdrop_path + ')' }">
             <div class="fade"></div>
           </div>
           <div v-else>
@@ -87,7 +77,9 @@
 import Vue from 'vue'
 import VueCookies from 'vue-cookies'
 Vue.use(VueCookies)
+//@ts-ignore
 VueCookies.config('7d')
+
 import axios from '~/plugins/axios'
 
 /// Enables the HJSON format parser
@@ -96,19 +88,22 @@ import fitty from 'fitty'
 
 /// Components
 import slide from '~/components/slide.vue'
-import title from '~/components/title.vue'
+import card from '~/components/card.vue'
 
 export default Vue.extend({
   components: {
     slide,
-    title
+    card
   },
   data: () => ({
     selected: null,
+    selectedType: "",
+    selectedSeason: "",
+    selectedEpisode: "",
     selectedVideoWidth: "90%",
 
-    dbCmsLow: 'url(https://image.tmdb.org/t/p/w500',
-    dbCmsHigh: 'url(https://image.tmdb.org/t/p/original',
+    dbCmsLow: 'https://image.tmdb.org/t/p/w500',
+    dbCmsHigh: 'https://image.tmdb.org/t/p/original',
     videoEnabled: true,
 
     header: {},
@@ -116,46 +111,17 @@ export default Vue.extend({
     categories: [],
 
     /// The movie info
-    moviesID: [],/*[
-      "508442",
-      "324552",
-      "808",
-      "4922",
-      "1771",
-      "2062",
-      "431693",
-      "464052",
-      "475557",
-      "400160",
-      "287947",
-      "8392"
-    ],*/
+    moviesID: [],
     movies: [],
 
     /// The show info
-    showsID: [],/*[
-      "246",
-      "1418",
-      "6357",
-      "67075",
-      "45790",
-      "65930",
-      "62565",
-      "80475",
-      "91056",
-      "6636",
-      "60625",
-      "87083",
-      "72305",
-      "10283",
-      "48891",
-      "63174",
-      "46952",
-      "63926",
-      "66573",
-      "86831"
-    ],*/
-    shows: []
+    showsID: [],
+    shows: [],
+    seasons: [],
+    episodes: [], // This will change a lot
+
+    /// DOM
+    showSeasonDropdown: false,
   }),
   mounted() {
     this.getMovieData();
@@ -207,7 +173,9 @@ export default Vue.extend({
     /// When a title is selected
     select(i: any, type: string) {
       this.selected = i;
+      this.selectedType = type;
       
+      // Get the trailer
       axios({
         method: 'get',
         url: "https://api.themoviedb.org/3/"+type+"/"+i.id+"/videos?api_key=a41b38cff983f069924ae937ffdd7631"
@@ -244,6 +212,14 @@ export default Vue.extend({
       .catch( (error) => {
         this.videoEnabled = false;
       })
+
+      // Get the seasons and episodes
+      if (type == "tv") {
+        this.getSeasons(i.id, () => {
+          this.selectedSeason = this.seasons[0];
+          this.getEpisodes();
+        });
+      }
       
     },
     /// When a title is deselected
@@ -262,6 +238,17 @@ export default Vue.extend({
           op += op * 0.1 || 0.1;
       }, 50);
     },
+
+
+    /// DOM Methods
+    seasonDropdown() {
+      this.showSeasonDropdown = !this.showSeasonDropdown;
+    },
+    seasonSelect(s: string) {
+      this.showSeasonDropdown = false;
+      this.selectedSeason = s;
+    },
+
 
     /// Fetch from TMDB
     /// Get movie data
@@ -324,11 +311,47 @@ export default Vue.extend({
         alert(error);
       })
     },
+    /// 
+    getSeasons(id: string, callback: Function) {
+      axios({
+        method: 'get',
+        //@ts-ignore
+        url: "getSeasonsFromID?login="+$cookies.get('SNID')+"&id="+id
+      })
+      .then( (r) => {
+        //@ts-ignore
+        this.seasons = r.data;
+
+        callback();
+      })
+      .catch( (error) => {
+        alert(error);
+      })
+    },
+    getEpisodes() {
+      axios({
+        method: 'get',
+        //@ts-ignore
+        url: "getEpisodesFromID?login="+$cookies.get('SNID')+"&id="+this.selected.id+"&season="+this.selectedSeason
+      })
+      .then( (r) => {
+        this.episodes = r.data;
+      })
+      .catch( (error) => {
+        alert(error);
+      })
+    },
     play(title: any) {
       var type = "s";
+      //@ts-ignore
       (this.movies.includes(title) == true) ? type = "m" : "s";
 
-      this.$router.push('/play/'+type+'/'+title.id);
+      if (type == "m") {
+        this.$router.push('/play/'+type+'/'+title.id);
+      } else {
+        this.$router.push('/play/'+type+'/'+title.id+'/'+1+'/'+1);
+      }
+      
     }
   }
 })
@@ -458,121 +481,6 @@ export default Vue.extend({
     }
   }
 
-  $categoriesHeight: 30vh;
-  .categories {
-    width: 100%;
-    height: $categoriesHeight;
-
-    position: absolute;
-    left: 0;
-    top: 50%;
-
-    padding-left: $margin;
-
-    overflow-y: hidden;
-    overflow-x: auto;
-    white-space: nowrap;
-
-    .cat {
-      width: 30vw;
-      height: 100%;
-
-      display: inline-block;
-
-      border-radius: 20px;
-      cursor: pointer;
-
-      background-size: cover;
-      background-repeat: no-repeat;
-      background-position: center top;
-
-      margin-right: 20px;
-
-      .fade {
-        width: 100%;
-        height: 100%;
-
-        background-image:  linear-gradient(rgba(0,0,0, 0) 0%,rgba(0,0,0, 0.95) 100%);
-
-        p {
-          position: relative;
-          top: 50%;
-          transform: translateY(-50%);
-
-          text-align: center;
-          font-size: 300%;
-          font-family: Arial, Helvetica, sans-serif;
-          text-transform: capitalize;
-
-          color: white;
-        }
-      }
-    }
-    /*.cat:hover, .cat:focus {
-      transform: scale(1);
-    }*/
-  }
-
-  $movSpace: 20px;
-  $movWidth: calc(15vw - (#{$movSpace} / 2));
-  $movMovement: 20px;
-  .mov {
-    width: $movWidth;
-    height: calc(#{$movWidth} * (16/9));
-
-    display: inline-block;
-
-    border-radius: 20px;
-    cursor: pointer;
-
-    background-size: cover;
-    background-repeat: no-repeat;
-    background-position: center top;
-
-    margin-right: $movSpace;
-
-    transition: transform 0.5s ease;
-    transform: translateY(0px);
-  }
-  .mov:hover, .mov:focus {
-    transform: translateY(-$movMovement);
-  }
-
-  .t {
-    width: 100%;
-    position: relative;
-    left: 0;
-    top: calc(50vh + 40px + 40px);
-    //top: calc(50vh + #{$categoriesHeight} + 20px);
-
-    .h {
-      text-align: left;
-      font-size: 36px;
-      font-family: Arial, Helvetica, sans-serif;
-      text-transform: capitalize;
-      color: white;
-
-      //margin-bottom: 35px;
-      margin-bottom: 25px;
-      padding-left: calc(#{$margin} * 3);
-    }
-
-    $titlesMarginTop: 20px;
-    .titles {
-      width: 100%;
-
-      overflow-y: hidden;
-      overflow-x: auto;
-      white-space: nowrap;
-
-      margin-top: -$titlesMarginTop;
-      margin-bottom: $titlesMarginTop;
-      padding-left: calc(#{$margin} * 3);
-      padding-right: calc(#{$margin} * 3);
-      padding-top: 20px;
-    }
-  }
-
   $cardColor: #111111;
   //$cardColor: #202020;
   .card {
@@ -630,6 +538,46 @@ export default Vue.extend({
 
         .overview {
           color: white;
+        }
+
+        .episode-select {
+          width: 100%;
+
+          position: relative;
+          display: inline-block;
+
+          margin-top: $margin;
+          margin-bottom: $margin;
+
+          .season-select {
+            border-radius: 0;
+            color: white;
+            background-color: purple;
+          }
+          .season-select:hover {
+            background-color: rgb(99, 0, 99);
+            cursor: pointer;
+          }
+
+          .season-dropdown {
+            width: 100%;
+
+            position: absolute;
+            background-color: gray;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1000;
+
+            a {
+              color: white;
+              padding: 12px 16px;
+              text-decoration: none;
+              display: block;
+            }
+            a:hover {
+              background-color: #ddd;
+            }
+          }
         }
 
         .bttm {
