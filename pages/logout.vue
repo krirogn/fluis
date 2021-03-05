@@ -1,8 +1,7 @@
 <template>
   <div class="container">
-    <input type="text" placeholder="Username" v-model="uname"><br>
-    <input type="password" placeholder="Password" v-model="pass"><br>
-    <button type="button" class="btn play" @click="login">Play Now</button>
+    <input type="checkbox" placeholder="da" v-model="da"><br>
+    <button type="button" class="btn play" @click="logout">Logout</button>
   </div>
 </template>
 
@@ -21,20 +20,14 @@ import axios from '~/plugins/axios'
 var Hjson = require('hjson')
 
 export default Vue.extend({
-  layout: 'login',
   data: () => ({
     config: Hjson.parse(require('../fluis.config.hjson').default),
-    uname: "",
-    pass: ""
+    da: false
   }),
-  mounted() {
-    var login = new Login(axios);
-    login.IsLoggedIn(this);
-  },
   methods: {
-    login() {
+    logout() {
       var login = new Login(axios);
-	    login.LogIn(this.pass, this.uname, this);
+      login.LogOut(this.da, this);
     }
   }
 })

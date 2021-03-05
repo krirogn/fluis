@@ -9,7 +9,7 @@
         <div class="cont">
           <p class="titleName" ref="titleNameElem">{{ headerName }}</p><br>
           <div class="buttons">
-            <button type="button" @click="play(header)" class="btn play">Play Now</button>
+            <button type="button" @click="playHeader()" class="btn play">Play Now</button>
             <!--button type="button" class="btn list">Watch List</button-->
           </div>
         </div>
@@ -17,7 +17,11 @@
 
       <!-- The header bar -->
       <div class="header">
-        
+        <div class="logo">
+          <img src="~/assets/images/logo.svg" draggable="false">
+          <p>fluis</p>
+        </div>
+        <button type="button" @click="$router.push('/logout')" class="btn play logout">Logout</button>
       </div>
     </div>
 
@@ -44,17 +48,27 @@
           </div>
 
           <div class="right">
-            <p class="overview">{{ selected.overview }}</p>
+            <p class="overview" ref="overview">{{ selected.overview }}</p>
 
-            <div v-if="selectedType == 'tv'" class="episode-select">
-              <button type="button" @click="seasonDropdown()" class="btn season-select">{{ selectedSeason }}</button>
-              <div v-if="showSeasonDropdown" ref="seasonDropdownContent" class="season-dropdown">
-                <a v-for="s in seasons" @click="seasonSelect(s)">{{ s }}</a>
+            <div v-if="selectedType == 'tv'" class="episode-select" ref="episodeSelect">
+              <div ref="seasonButtons" style="overflow-y:hidden;overflow-x:auto;">
+                <button type="button" v-for="s in seasons" @click="seasonSelect(s)" v-bind:style="{ backgroundColor: (s == selectedSeason) ? '#614B79' : 'white', color: (s == selectedSeason) ? 'white' : 'black' }" class="btn season-select">{{ s }}</button>
               </div>
+
+              <div v-if="$refs.episodeSelect && $refs.seasonButtons" class="episodes" :style="{ '--episodeSelectHeight': $refs.episodeSelect.offsetHeight, '--seasonButtonsHeight': $refs.seasonButtons.offsetHeight }">
+                <div v-for="e in episodes" class="episode" @click="play(e.episode_number)">
+                  <p class="number">{{ e.episode_number }}</p>
+                  <p class="name">{{ e.name }}</p>
+                </div>
+              </div>
+              
+              <!--div v-if="showSeasonDropdown" ref="seasonDropdownContent" class="season-dropdown">
+                <a v-for="s in seasons" @click="seasonSelect(s)">{{ s }}</a>
+              </div-->
             </div>
 
-            <div class="bttm">
-              <button type="button" @click="play(selected)" class="btn play">Play Now</button>
+            <div v-if="selectedType != 'tv'" class="bttm">
+              <button type="button" @click="play()" class="btn play">Play Now</button>
               <!--button type="button" class="btn list">Watch List</button-->
             </div>
           </div>
@@ -132,11 +146,16 @@ export default Vue.extend({
           this.shows.length == this.showsID.length && this.showsID.length > 0) {
         
         var mH = this.movies[Math.floor(Math.random() * this.movies.length)];
-        var sH = this.shows[Math.floor(Math.random() * this.shows.length)];
+        //var sH = this.shows[Math.floor(Math.random() * this.shows.length)];
         
-        if (mH == undefined && sH == undefined) {
+        if (mH == undefined) {// && sH == undefined) {
           alert("You have no titles");
-        } else if (mH != undefined && sH == undefined) {
+        } else {
+          this.header = mH;
+          //@ts-ignore
+          this.headerName = mH.title;
+        }
+        /*else if (mH != undefined && sH == undefined) {
           this.header = mH;
           //@ts-ignore
           this.headerName = mH.title;
@@ -154,7 +173,7 @@ export default Vue.extend({
             //@ts-ignore
             this.headerName = sH.name;
           }
-        }
+        }*/
         
         setTimeout( () => {
           var f = fitty('.titleName', {
@@ -217,7 +236,7 @@ export default Vue.extend({
       if (type == "tv") {
         this.getSeasons(i.id, () => {
           this.selectedSeason = this.seasons[0];
-          this.getEpisodes();
+          this.getEpisodes(i.id);
         });
       }
       
@@ -328,41 +347,62 @@ export default Vue.extend({
         alert(error);
       })
     },
-    getEpisodes() {
+    getEpisodes(id: string) {
       axios({
         method: 'get',
         //@ts-ignore
         url: "getEpisodesFromID?login="+$cookies.get('SNID')+"&id="+this.selected.id+"&season="+this.selectedSeason
       })
       .then( (r) => {
-        this.episodes = r.data;
+        //this.episodes = r.data;
+        console.log(r.data.length);
+        //this.episodes = [];
+
+        for (var i = 0; i < r.data.length; i++) {
+          console.log(r.data[i]);
+          
+          axios({
+            method: 'get',
+            url: "https://api.themoviedb.org/3/tv/"+id+"/season/"+this.selectedSeason+"/episode/"+r.data[i]+"?api_key=a41b38cff983f069924ae937ffdd7631"
+          })
+          .then( (b) => {
+            //@ts-ignore
+            this.episodes.push(b.data);
+          })
+          .catch( (error) => {
+            alert(error);
+          })
+        }
       })
       .catch( (error) => {
         alert(error);
       })
     },
-    play(title: any) {
+    play(episode: number = 1) {
       var type = "s";
       //@ts-ignore
-      (this.movies.includes(title) == true) ? type = "m" : "s";
+      (this.movies.includes(this.selected) == true) ? type = "m" : "s";
 
       if (type == "m") {
-        this.$router.push('/play/'+type+'/'+title.id);
+        this.$router.push('/play/'+type+'/'+this.selected.id);
       } else {
-        this.$router.push('/play/'+type+'/'+title.id+'/'+1+'/'+1);
+        this.$router.push('/play/'+type+'/'+this.selected.id+'/'+this.selectedSeason+'/'+episode);
       }
       
+    },
+    playHeader() {
+      this.$router.push('/play/m/'+this.header.id);
     }
   }
 })
 </script>
 
 <style scoped lang="scss">
+$primaryColor: #614B79;
+
 .container {
   width: 100vw;
   height: 100vh;
-
-  //background-color: black;
 
   .btn {
     border-radius: 20px;
@@ -378,14 +418,14 @@ export default Vue.extend({
     text-transform: uppercase;
   }
   .play {
-    background-color: purple;
+    background-color: $primaryColor;
     color: white;
 
     margin-right: 10px;
   }
   .play:hover {
     background-color: rgba($color: white, $alpha: 0.0);
-    border: purple solid 2px;
+    border: $primaryColor solid 2px;
     padding: 8px 13px;
     cursor: pointer;
   }
@@ -410,15 +450,60 @@ export default Vue.extend({
 
     position: absolute;
 
+    margin-top: 40px;
+
     .header {
       width: 100%;
-      height: 50px;
+      height: 60px;
 
       position: absolute;
-      top: 0;
+      top: -40px;
       left: 0;
 
-      //background-color: yellow;
+      //background-image: linear-gradient(1deg, rgba(0, 0, 0, 0) 30%, black 50%, black 100%);
+
+      .logout {
+        position: absolute;
+        top: 50%;
+        right: 20px;
+        transform: translateY(-50%);
+
+        font-size: 14px;
+      }
+
+      .logo {
+        height: 90%;
+
+        position: absolute;
+        top: 50%;
+        left: 20px;
+        transform: translateY(-50%);
+
+        display: inline-block;
+
+        img {
+          height: 80%;
+
+          position: relative;
+          float: left;
+          top: 50%;
+          transform: translateY(-50%);
+
+          user-select: none;
+        }
+
+        p {
+          position: relative;
+          float: right;
+          top: 50%;
+          transform: translateY(-50%);
+
+          color: $primaryColor;
+          font-size: 48px;
+
+          user-select: none;
+        }
+      }
     }
 
     .fade {
@@ -549,10 +634,14 @@ export default Vue.extend({
           margin-top: $margin;
           margin-bottom: $margin;
 
+          //background-color: yellow;
+
           .season-select {
+            margin-right: 10px;
+
             border-radius: 0;
             color: white;
-            background-color: purple;
+            background-color: $primaryColor;
           }
           .season-select:hover {
             background-color: rgb(99, 0, 99);
@@ -576,6 +665,61 @@ export default Vue.extend({
             }
             a:hover {
               background-color: #ddd;
+            }
+          }
+
+          .episodes {
+            width: 100%;
+            max-height: calc(var(--episodeSelectHeight) - 20px - var(--seasonButtonsHeight));
+            
+            margin-top: 20px;
+            margin-bottom: 10px;
+
+            overflow-x: hidden;
+            overflow-y: scroll;
+
+            //background-color: blue;
+
+            .episode {
+              width: 100%;
+              height: 40px;
+
+              margin-bottom: 10px;
+              padding-left: 10px;
+              padding-right: 10px;
+
+              background-color: $primaryColor;
+
+              border-radius: 10px;
+
+              .number {
+                width: 10%;
+
+                position: relative;
+                top: 50%;
+                transform: translateY(-50%);
+
+                float: left;
+
+                color: white;
+              }
+
+              .name {
+                width: 90%;
+
+                position: relative;
+                top: 50%;
+                transform: translateY(-50%);
+
+                text-align: right;
+
+                float: right;
+
+                color: white;
+              }
+            }
+            .episode:hover {
+              cursor: pointer;
             }
           }
         }

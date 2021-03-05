@@ -1,6 +1,6 @@
 <template>
   <div class="container">
-    <div class="back"></div>
+    <div class="back" @click="$router.push('/')"></div>
 
     <vue-plyr :options="options" ref="plyr">
       <video controls playsinline>
@@ -68,6 +68,28 @@ export default Vue.extend({
       let sendRec = () => setTimeout( () => {
         var urlType;
         (this.$route.params.type == 's') ? urlType = "shows" : urlType = "movies";
+        var urlData = {};
+        if (urlType == "movies") {
+          urlData = {
+            type: urlType,
+            //@ts-ignore
+            login: $cookies.get('SNID'),
+            id: this.$route.params.id,
+            //@ts-ignore
+            time: Math.floor(this.$refs.plyr.player.currentTime)
+          };
+        } else {
+          urlData = {
+            type: urlType,
+            //@ts-ignore
+            login: $cookies.get('SNID'),
+            id: this.$route.params.id,
+            //@ts-ignore
+            time: Math.floor(this.$refs.plyr.player.currentTime),
+            season: this.$route.params.season,
+            episode: this.$route.params.episode
+          };
+        }
 
         console.log("Start Update");
         
@@ -77,14 +99,7 @@ export default Vue.extend({
           axios({
             method: 'post',
             url: "watchTime",
-            data: {
-              type: urlType,
-              //@ts-ignore
-              login: $cookies.get('SNID'),
-              id: this.$route.params.id,
-              //@ts-ignore
-              time: Math.floor(this.$refs.plyr.player.currentTime)
-            }
+            data: urlData
           })
           .then( (r) => {
             console.log("Updated time");
@@ -111,7 +126,7 @@ export default Vue.extend({
 
     },
     loadData() {
-      var urlType: String;
+      var urlType: string;
       (this.$route.params.type == 's') ? urlType = "shows" : urlType = "movies";
 
       axios({
@@ -120,11 +135,19 @@ export default Vue.extend({
         url: "https://api.themoviedb.org/3/"+((this.$route.params.type == 's') ? "tv/" : "movie/")+this.$route.params.id+"?api_key=a41b38cff983f069924ae937ffdd7631"
       })
       .then( (mdb) => {
+
+        var urlQuery: string;
+        if (urlType == "movies") {
+          //@ts-ignore
+          urlQuery = "content?type="+urlType+"&login="+$cookies.get('SNID')+"&id="+this.$route.params.id;
+        } else {
+          //@ts-ignore
+          urlQuery = "content?type="+urlType+"&login="+$cookies.get('SNID')+"&id="+this.$route.params.id+"&season="+this.$route.params.season+"&episode="+this.$route.params.episode;
+        }
         
         axios({
           method: 'get',
-          //@ts-ignore
-          url: "content?type="+urlType+"&login="+$cookies.get('SNID')+"&id="+this.$route.params.id
+          url: urlQuery
         })
         .then( (r) => {
           //@ts-ignore
@@ -171,6 +194,8 @@ export default Vue.extend({
     top: $backMargin;
     left: $backMargin;
     z-index: 99;
+
+    cursor: pointer;
 
     background-color: white;
   }
